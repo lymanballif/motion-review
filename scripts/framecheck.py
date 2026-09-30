@@ -3,6 +3,7 @@
   crop   <t> <x,y,w,h> [out]   one frame, cropped (stage px) and upscaled, for detail work
   seam                         pixel diff between the last frame and frame 0 (0 = seamless loop)
   steps  [fps]                 per-frame change across the whole loop; spikes = pops, jumps or hard cuts
+  clip   <video-path> [n]      contact sheet of a video file's frames with timestamps — pick in-points and held frames
 usage: python3 tools/framecheck.py sheet 0,1.5,3.2 --url http://localhost:5178/"""
 import argparse, asyncio, io, os
 from playwright.async_api import async_playwright
@@ -19,6 +20,21 @@ def mean(d):
 
 async def main():
     async with async_playwright() as p:
+        if a.cmd == 'clip':
+            b = await p.chromium.launch(channel='chromium'); n = int(a.arg2 or 18)
+            pg = await b.new_page(viewport={'width': 480, 'height': 360})
+            src = a.url.rstrip('/') + '/' + a.arg.lstrip('./')
+            await pg.set_content(f'<body style="margin:0;background:#000"><video id=v src="{src}" muted style="width:480px;height:360px;object-fit:contain;display:block"></video></body>')
+            await pg.wait_for_function("document.getElementById('v').readyState>=1")
+            dur = await pg.evaluate("document.getElementById('v').duration")
+            from PIL import ImageDraw
+            cols = 6; rows = (n + cols - 1) // cols; sheet = Image.new('RGB', (cols * 244, rows * 184), 'white')
+            for i in range(n):
+                t = dur * i / n
+                await pg.evaluate(f"new Promise(r=>{{const v=document.getElementById('v');v.onseeked=()=>r();v.currentTime={t}}})")
+                im = Image.open(io.BytesIO(await pg.screenshot())).convert('RGB'); ImageDraw.Draw(im).text((8, 8), f'{t:.2f}s', fill='white')
+                sheet.paste(im.resize((240, 180)), ((i % cols) * 244, (i // cols) * 184))
+            out = a.out or 'clip-sheet.png'; sheet.save(out); print(out, f'(duration {dur:.2f}s)'); await b.close(); return
         b = await p.chromium.launch(channel='chromium'); probe = await b.new_page(); await probe.goto(URL)
         await probe.wait_for_function('window.ready === true', timeout=60000)
         (w, h), dur = await probe.evaluate('window.EXPORT_SIZE'), await probe.evaluate('window.DUR'); await probe.close()

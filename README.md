@@ -18,9 +18,57 @@ social posts — with a review harness that lets people leave **timestamped note
   and hooks for frame-exact export.
 - **Scripts** — `serve.py` (static server with range requests for video + local-only export endpoint),
   `export.py` + `encode.swift` (60fps, 2× supersampled H.264 via AVFoundation, no ffmpeg),
-  `framecheck.py` (contact sheets at timestamps, loop-seam check, pop/jitter scan).
+  `framecheck.py` (frames at timestamps, loop-seam check, pop/jitter scan, video contact sheets).
 - **Guidance** (`SKILL.md`, `references/notes-workflow.md`) — how the agent should build animations for review
   and turn notes like *"3.94s — this pause was too long"* into precise, verified changes.
+
+## Instagram preview
+
+**Instagram** (or **I**) frames the artboard as a light-mode 4:5 feed post — header, carousel counter and dots,
+like/comment/share/save, likes, caption — so you can judge the motion where it will actually be seen. It cycles
+**off → White → Black**: a white page with the post as a softly shadowed card, or a black surround that makes the
+post's edges unmistakable. Configure it per project:
+
+```js
+ReviewBar.mount(player, {
+  storageKey: 'my-anim-notes',
+  instagram: { handle: 'yourstudio', subtitle: 'Client', caption: 'One line about the work.', likes: '1,284', comments: 48, slides: 4 },
+});
+```
+
+## Keys and links
+
+| Key | Action |
+| --- | --- |
+| Space | Play / pause |
+| ← / → | Step one frame (Shift: 0.5s) |
+| 1–9 | Jump to keyframes |
+| N | Note at this moment (opens the notes panel) |
+| L | Show / hide notes |
+| I | Instagram preview: off → White → Black |
+| S | Speed: 1× → ½× → ¼× |
+
+Shareable URL params: `?t=4.2` (freeze on a moment), `?speed=0.5`, `?ig=light` / `?ig=dark`, `?clean` (no UI, for
+screen recording), `?actual` (1:1 pixels). Notes are stored per viewer — remote reviewers use **Copy all** and send the text.
+
+## Tools
+
+```bash
+python3 tools/serve.py 5178                               # serve the page (video-safe) + export endpoint
+python3 tools/framecheck.py sheet 2.4,2.55,2.7            # frames at timestamps (use on every note)
+python3 tools/framecheck.py crop 1.31 100,450,880,450     # zoom into a region at a moment
+python3 tools/framecheck.py seam                          # is the loop seamless? (mean ≈ 0)
+python3 tools/framecheck.py steps 30                      # find pops / jumps / hard cuts
+python3 tools/framecheck.py clip assets/clip.mp4 24       # contact sheet of a video, to pick in-points
+python3 tools/export.py --fps 60 --scale 2                # frame-exact H.264 MP4
+```
+
+Rendering uses full Chromium (new headless): Playwright's default headless shell silently drops `backdrop-filter`,
+so frosted-glass elements would export unblurred.
+
+`references/techniques.md` has copy-ready code for the patterns reviewers kept asking for: shrinking rounded crops,
+a camera locked on the subject, a film that glides to a stop, directional menu wipes, seamless loops, squircle
+corners and strokes, and baked shadows.
 
 ## Install
 

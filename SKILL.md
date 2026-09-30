@@ -23,8 +23,9 @@ deterministic clock and a review bar; three scripts serve, inspect and export it
 | `assets/template.html` | Minimal working page wiring both, with the stage-fit pattern |
 | `scripts/serve.py` | Threaded static server with Range requests (needed for video) and the local-only `/api/export` endpoint |
 | `scripts/export.py` + `encode.swift` | Frame-exact render (Playwright) → H.264 MP4 via AVFoundation (no ffmpeg) |
-| `scripts/framecheck.py` | `sheet`, `crop`, `seam`, `steps` — see frames at timestamps, check the loop seam, find pops |
+| `scripts/framecheck.py` | `sheet`, `crop`, `seam`, `steps`, `clip` — frames at timestamps, loop seam, pops, and video contact sheets for picking in-points |
 | `references/notes-workflow.md` | How to turn timestamped notes into precise changes — read before acting on notes |
+| `references/techniques.md` | Copy-ready code for the patterns below (shrinking crops, subject-locked zoom, film glide-to-stop, menu wipes, seamless loops, squircles, baked shadows) |
 
 ## Setup in a project
 
