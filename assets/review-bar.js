@@ -3,7 +3,8 @@
  *   row 1 — full-width scrubber with the animation's beats labelled
  *   row 2 — play/pause · timecode · 1× ½× ¼× · Notes (toggle) · + Note · Instagram (toggle) · Export MP4
  * The notes panel can be shown/hidden and never covers the animation (the stage is fitted beside it).
- * The Instagram toggle frames the stage as a feed post (header, actions, likes, caption) to judge it in context.
+ * The Instagram toggle frames the stage as a light-mode feed post (header, actions, likes, caption) to judge it in
+ * context; it cycles off → on a white backdrop (card with a soft shadow) → on a black backdrop.
  * Hidden entirely with ?clean / ?actual / ?export so recordings and exports stay clean.
  *
  *   ReviewBar.mount(player, {
@@ -12,7 +13,7 @@
  *   });
  *   ReviewBar.fit(stageEl);   // positions + scales the stage (call once; it re-fits on resize/toggles)
  *
- * Keys: Space play/pause · ←/→ 1 frame (Shift 0.5s) · 1–9 keyframes · N new note · L notes panel · I Instagram · S speed
+ * Keys: Space play/pause · ←/→ 1 frame (Shift 0.5s) · 1–9 keyframes · N new note · L notes panel · I Instagram (cycles) · S speed
  */
 (function () {
   const BAR_H = 104, PANEL_W = 300, GAP = 20;
@@ -68,8 +69,12 @@
   .mr-notes .del { border: 0; background: none; color: var(--mr-ui-2); cursor: pointer; font-size: 15px; padding: 0 2px; }
   .mr-notes ul:empty::before { content: "Pause anywhere and press N to leave a note at that moment."; display: block; padding: 4px 8px 6px; color: var(--mr-ui-2); }
   /* Instagram feed-post preview (light mode) */
-  body.mr-ig-on { background: #fff !important; }
-  .mr-ig { position: fixed; z-index: 1; pointer-events: none; font: 14px/18px -apple-system, "SF Pro Text", system-ui, sans-serif; color: #000; }
+  body.mr-ig-light { background: #fff !important; }
+  body.mr-ig-dark { background: #000 !important; }
+  .mr-ig { position: fixed; z-index: 0; pointer-events: none; font: 14px/18px -apple-system, "SF Pro Text", system-ui, sans-serif; color: #000;
+    background: #fff; border-radius: 12px; overflow: hidden; }
+  body.mr-ig-light .mr-ig { box-shadow: 0 0 0 1px rgba(0,0,0,.04), 0 2px 6px rgba(0,0,0,.04), 0 24px 64px rgba(0,0,0,.12); }
+  .mr-ig-tag { font-size: 11px; color: var(--mr-ui-2); } .mr-btn[aria-pressed="true"] .mr-ig-tag { color: rgba(255,255,255,.6); }
   .mr-ig-head, .mr-ig-foot { position: absolute; left: 0; right: 0; }
   .mr-ig-head { top: 0; height: 54px; display: flex; align-items: center; gap: 10px; padding: 0 12px; box-sizing: border-box; }
   .mr-ig-av { width: 32px; height: 32px; border-radius: 50%; padding: 2px; box-sizing: border-box; background: conic-gradient(from 200deg, #f9ce34, #ee2a7b, #6228d7, #f9ce34); }
@@ -116,7 +121,7 @@
         Object.assign(ig.style, { display: 'block', left: x + 'px', top: y + 'px', width: pw + 'px', height: HEAD + mh + FOOT + 'px' });
         ig.querySelector('.mr-ig-foot').style.top = HEAD + mh + 'px';
         ig.querySelector('.mr-ig-count').style.top = HEAD + 12 + 'px';
-        stage.style.transform = `translate(${x}px, ${y + HEAD}px) scale(${k})`;
+        stage.style.transform = `translate(${x}px, ${y + HEAD}px) scale(${k})`; stage.style.zIndex = '1';
         return;
       }
       if (ig) ig.style.display = 'none';
@@ -151,7 +156,7 @@
         <div class="mr-spacer"></div>
         <button class="mr-btn mr-notes-t" aria-pressed="false" title="Show or hide notes (L)">Notes <span class="k mr-count"></span></button>
         <button class="mr-btn mr-add" title="Note at the current moment (N)">+ Note <span class="k">N</span></button>
-        <button class="mr-btn mr-ig-t" aria-pressed="false" title="Preview as an Instagram post (I)">Instagram <span class="k">I</span></button>
+        <button class="mr-btn mr-ig-t" aria-pressed="false" title="Preview as an Instagram post: off → white → black (I)">Instagram <span class="mr-ig-tag"></span> <span class="k">I</span></button>
         <button class="mr-btn mr-export" hidden title="Render a frame-exact MP4 (2× supersampled)">Export MP4</button>
       </div>`;
     const panel = document.createElement('aside'); panel.className = 'mr-notes'; panel.hidden = true;
@@ -213,13 +218,18 @@
     notesT.onclick = () => setNotes(!ReviewBar.notesOpen);
     $('.mr-x').onclick = () => setNotes(false);
 
-    // Instagram preview (remembered, and ?ig in the URL)
-    function setIG(on) {
-      ReviewBar.instagram = on; igT.setAttribute('aria-pressed', String(on)); document.body.classList.toggle('mr-ig-on', on);
-      const u = new URL(location.href); on ? u.searchParams.set('ig', '1') : u.searchParams.delete('ig'); history.replaceState(null, '', u);
-      store.set('mr-ig', on); refit();
+    // Instagram preview: off → 'light' (white backdrop, card with a soft shadow) → 'dark' (black backdrop) → off.
+    // Remembered per viewer; ?ig=light / ?ig=dark in the URL opens straight into it.
+    const IG_MODES = [false, 'light', 'dark'];
+    function setIG(mode) {
+      ReviewBar.instagram = mode; igT.setAttribute('aria-pressed', String(!!mode));
+      igT.querySelector('.mr-ig-tag').textContent = mode ? (mode === 'light' ? 'White' : 'Black') : '';
+      document.body.classList.toggle('mr-ig-light', mode === 'light'); document.body.classList.toggle('mr-ig-dark', mode === 'dark');
+      const u = new URL(location.href); mode ? u.searchParams.set('ig', mode) : u.searchParams.delete('ig'); history.replaceState(null, '', u);
+      store.set('mr-ig', mode); refit();
     }
-    igT.onclick = () => setIG(!ReviewBar.instagram);
+    const cycleIG = () => setIG(IG_MODES[(IG_MODES.indexOf(ReviewBar.instagram) + 1) % IG_MODES.length]);
+    igT.onclick = cycleIG;
 
     // Notes (per viewer, localStorage)
     let notes = store.get(KEY, []), noteAt = 0;
@@ -291,14 +301,15 @@
       else if (e.key >= '1' && e.key <= '9' && player.keyframes[+e.key - 1] != null) player.seek(player.keyframes[+e.key - 1]);
       else if (k === 'n') { e.preventDefault(); startNote(); }
       else if (k === 'l') setNotes(!ReviewBar.notesOpen);
-      else if (k === 'i') setIG(!ReviewBar.instagram);
+      else if (k === 'i') cycleIG();
       else if (k === 's') player.cycleSpeed();
     });
 
     // Restore UI state
     const params = new URLSearchParams(location.search);
     setNotes(store.get('mr-notes-open', false));
-    setIG(params.has('ig') || store.get('mr-ig', false));
+    const igParam = params.get('ig'), saved = store.get('mr-ig', false);
+    setIG(igParam === 'dark' ? 'dark' : params.has('ig') ? 'light' : IG_MODES.includes(saved) ? saved : saved ? 'light' : false);
     return ReviewBar;
   };
 

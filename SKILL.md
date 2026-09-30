@@ -79,7 +79,8 @@ reviewers use **Copy all** and send the text.
 
 Two rows: a full-width scrubber labelled with `beats`, then play/pause · timecode · 1× ½× ¼× · **Notes** (show/hide,
 with count) · **+ Note** · **Instagram** · **Export MP4**. The notes panel and Instagram preview are remembered per
-viewer; `?ig=1` opens straight into the Instagram preview (handy for sharing). Configure the post with
+viewer. **I** cycles the Instagram preview: off → white backdrop (card with a soft shadow) → black backdrop; the post
+itself is always light mode. `?ig=light` / `?ig=dark` opens straight into it (handy for sharing). Configure the post with
 `instagram: { handle, subtitle, caption, likes, comments, slides, avatar }` — `slides > 1` adds the carousel counter and dots.
 
 Keys: Space play/pause · ←/→ one frame (Shift = 0.5s) · 1–9 keyframes · N new note · L notes panel · I Instagram · S speed.
