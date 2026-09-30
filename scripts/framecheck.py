@@ -19,7 +19,7 @@ def mean(d):
 
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(); probe = await b.new_page(); await probe.goto(URL)
+        b = await p.chromium.launch(channel='chromium'); probe = await b.new_page(); await probe.goto(URL)
         await probe.wait_for_function('window.ready === true', timeout=60000)
         (w, h), dur = await probe.evaluate('window.EXPORT_SIZE'), await probe.evaluate('window.DUR'); await probe.close()
         pg = await b.new_page(viewport={'width': w, 'height': h}); await pg.goto(URL); await pg.wait_for_function('window.ready === true')

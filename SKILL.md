@@ -71,6 +71,8 @@ reviewers use **Copy all** and send the text.
   slow-down and blend neighbours on a canvas at an eased clip position.
 - Seamless loop: end on exactly frame one — same geometry, same scale, and matching velocity if something is
   moving (e.g. a constant-speed push that continues through t=0). Verify with `framecheck.py seam` (mean ≈ 0).
+- Headless rendering must use full Chromium (`channel='chromium'`, new headless): Playwright's default headless shell
+  silently drops `backdrop-filter`, so frosted/glass elements export unblurred. The scripts already do this.
 - Very large box-shadow blurs get clipped in Chrome; bake shadows to a canvas once and only transform them.
 - Continuous corners: squircle `clip-path: path()` (Figma corner smoothing 0.6) with the stroke drawn as a
   matching SVG path — an inset box-shadow stroke won't follow the curve.

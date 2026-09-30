@@ -22,7 +22,9 @@ def report(**kw):
 async def render(frames):
     url = a.url + ('&' if '?' in a.url else '?') + 'export'
     async with async_playwright() as p:
-        b = await p.chromium.launch()
+        # Full Chromium (new headless), not Playwright's default headless shell: the shell silently skips
+        # backdrop-filter, so glass/frosted elements would export unblurred.
+        b = await p.chromium.launch(channel='chromium')
         probe = await b.new_page(); await probe.goto(url); await probe.wait_for_function('window.ready === true', timeout=60000)
         w, h = await probe.evaluate('window.EXPORT_SIZE'); dur = await probe.evaluate('window.DUR'); await probe.close()
         pg = await b.new_page(viewport={'width': w, 'height': h}, device_scale_factor=a.scale)
