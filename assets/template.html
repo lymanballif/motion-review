@@ -7,8 +7,8 @@
 <style>
   html, body { margin: 0; height: 100%; background: #fbfbfb; overflow: hidden; }
   /* Fixed-size artboard, scaled to fit above the review bar */
-  #stage { position: absolute; left: 50%; top: 50%; width: 1080px; height: 1350px; overflow: hidden; background: #fbfbfb;
-    transform-origin: 50% 50%; font-family: system-ui, sans-serif; }
+  #stage { position: absolute; left: 0; top: 0; width: 1080px; height: 1350px; overflow: hidden; background: #fbfbfb;
+    transform-origin: 0 0; font-family: system-ui, sans-serif; }
   .box { position: absolute; left: 0; top: 0; width: 240px; height: 240px; border-radius: 56px; background: #1d1d1f; will-change: transform, opacity; }
 </style>
 </head>
@@ -49,16 +49,11 @@
     beats: [['Enter', T.enter[0]], ['Move', T.move[0]], ['Exit', T.exit[0]]],
     keyframes: [0, T.enter[1], T.move[1], T.exit[1]],
   });
-  ReviewBar.mount(player, { storageKey: 'motion-study-notes' });
-
-  const stage = document.getElementById('stage');
-  function fit() {
-    const [w, h] = player.size, barH = ReviewBar.height;
-    const k = player.actual ? 1 : Math.min(innerWidth / w, (innerHeight - barH) / h);
-    stage.style.top = (innerHeight - barH) / 2 + 'px';
-    stage.style.transform = `translate(-50%, -50%) scale(${k})`;
-  }
-  addEventListener('resize', fit); fit();
+  ReviewBar.mount(player, {
+    storageKey: 'motion-study-notes',
+    instagram: { handle: 'yourstudio', caption: 'A small motion study.', slides: 3 },   // for the Instagram preview (I)
+  });
+  ReviewBar.fit(document.getElementById('stage'));   // scales the artboard into the free space (beside notes, inside the IG post)
   player.start();
 })();
 </script>

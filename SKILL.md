@@ -9,7 +9,8 @@ A kit for making time-based animations that people can review precisely. Two dro
 deterministic clock and a review bar; three scripts serve, inspect and export it. The workflow it enables:
 
 1. You build the animation as **one pure function of time**, `render(t)`, on a fixed artboard.
-2. The reviewer scrubs, slows it to ½× or ¼×, presses **N** to note a moment, and pastes you `12.34s — note` lines.
+2. The reviewer scrubs, slows it to ½× or ¼×, presses **N** to note a moment, previews it as an Instagram post (**I**),
+   and pastes you `12.34s — note` lines.
 3. You map each timestamp to a named phase, look at those exact frames headlessly, fix, and verify.
 4. **Export MP4** renders every frame exactly (no dropped frames, videos frame-accurate) at 2× and encodes H.264.
 
@@ -18,7 +19,7 @@ deterministic clock and a review bar; three scripts serve, inspect and export it
 | Path | What it is |
 | --- | --- |
 | `assets/anim-player.js` | `AnimPlayer.create({ duration, size, render, beats, keyframes })` — clock, loop, pause, seek, speed, URL params, `drive()` for `<video>`, export hooks |
-| `assets/review-bar.js` | `ReviewBar.mount(player, { storageKey })` — the whole review UI (styles injected, no dependencies) |
+| `assets/review-bar.js` | `ReviewBar.mount(player, { storageKey, instagram })` + `ReviewBar.fit(stage)` — the whole review UI (styles injected, no dependencies) |
 | `assets/template.html` | Minimal working page wiring both, with the stage-fit pattern |
 | `scripts/serve.py` | Threaded static server with Range requests (needed for video) and the local-only `/api/export` endpoint |
 | `scripts/export.py` + `encode.swift` | Frame-exact render (Playwright) → H.264 MP4 via AVFoundation (no ffmpeg) |
@@ -45,7 +46,9 @@ reviewers use **Copy all** and send the text.
 
 ## Building the animation (the contract)
 
-- **Fixed artboard** (`#stage`, e.g. 1080×1350 for a 4:5 post) scaled to fit above `ReviewBar.height`; `?actual` renders 1:1.
+- **Fixed artboard** (`#stage`, e.g. 1080×1350 for a 4:5 post), `position: absolute`. Call `ReviewBar.fit(stage)` once:
+  it scales the artboard into the free space (above the two-row bar, beside the notes panel when it's open, or inside
+  the Instagram post preview) and re-fits on resize and toggles. `?actual` renders 1:1.
 - **`render(t)` must be pure**: everything derives from `t` — no CSS transitions, no `setTimeout`, no accumulated state.
   That is what makes scrubbing, slow motion, notes and frame-exact export trustworthy.
 - **Name the phases** in one table, `const T = { photoToItem: [0.5, 1.75], … }`, and give the player `beats` from it.
@@ -71,6 +74,15 @@ reviewers use **Copy all** and send the text.
 - Very large box-shadow blurs get clipped in Chrome; bake shadows to a canvas once and only transform them.
 - Continuous corners: squircle `clip-path: path()` (Figma corner smoothing 0.6) with the stroke drawn as a
   matching SVG path — an inset box-shadow stroke won't follow the curve.
+
+## The review bar
+
+Two rows: a full-width scrubber labelled with `beats`, then play/pause · timecode · 1× ½× ¼× · **Notes** (show/hide,
+with count) · **+ Note** · **Instagram** · **Export MP4**. The notes panel and Instagram preview are remembered per
+viewer; `?ig=1` opens straight into the Instagram preview (handy for sharing). Configure the post with
+`instagram: { handle, subtitle, caption, likes, comments, slides, avatar }` — `slides > 1` adds the carousel counter and dots.
+
+Keys: Space play/pause · ←/→ one frame (Shift = 0.5s) · 1–9 keyframes · N new note · L notes panel · I Instagram · S speed.
 
 ## Acting on notes
 

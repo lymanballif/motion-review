@@ -5,11 +5,14 @@ social posts — with a review harness that lets people leave **timestamped note
 
 ![Review bar with timestamped notes](docs/review-bar.png)
 
+![Instagram post preview](docs/instagram-preview.png)
+
 ## What you get
 
-- **Review bar** (`assets/review-bar.js`) — drop-in UI: play/pause, timecode, a scrubber labelled with your
-  animation's beats, **1× · ½× · ¼×** speed, notes pinned to the current moment (**N**), **Copy all** as
-  `1.85s — note` lines to paste to your agent, and **Export MP4**.
+- **Review bar** (`assets/review-bar.js`) — drop-in UI on two rows: a full-width scrubber labelled with your
+  animation's beats, then play/pause, timecode, **1× · ½× · ¼×** speed, a notes panel you can show or hide
+  (the animation is refitted beside it, never covered), notes pinned to the current moment (**N**), **Copy all**
+  as `1.85s — note` lines to paste to your agent, an **Instagram** feed-post preview (**I**), and **Export MP4**.
 - **Player** (`assets/anim-player.js`) — a deterministic clock around one pure `render(t)` function: loop,
   pause, seek, review speed, shareable `?t=` / `?speed=` links, native `<video>` kept in sync without hitches,
   and hooks for frame-exact export.
