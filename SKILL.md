@@ -78,15 +78,46 @@ reviewers use **Copy all** and send the text.
 - Continuous corners: squircle `clip-path: path()` (Figma corner smoothing 0.6) with the stroke drawn as a
   matching SVG path — an inset box-shadow stroke won't follow the curve.
 
+## Tunable transitions (the Motion panel)
+
+Declare the key transitions once and read their live values in `render(t)`; the reviewer can then change each one's
+**feel** (curated presets with plain-language names, or a custom curve they drag), **timing** (duration, start) and
+**style** (for swaps), preview just that transition on a loop, and send you the result.
+
+```js
+const T = { photoToItem: [0.5, 1.75], swap: [5.45, 6.3] };
+let M = null;                                    // declared before render; set after the player exists
+function render(t) {
+  const e = seg(t, ...T.photoToItem, M.photoToItem.ease);
+  if (M.swap.type === 'slide') { /* … */ }
+}
+const player = AnimPlayer.create({ duration, size, render, beats: [['Item', T.photoToItem]] });
+M = player.tune({
+  photoToItem: { label: 'Photo becomes a button', at: T.photoToItem, ease: 'glide' },          // preset key
+  swap: { label: 'Learn → About', at: T.swap, curve: [.65, 0, .1, 1], type: 'wipe', types: ['wipe', 'slide', 'dissolve', 'rise'] },
+}, { storageKey: 'my-anim-motion' });
+```
+
+- Presets (`AnimPlayer.EASES`): **Glide** `.6,0,.1,1` · **Settle** `.5,0,.1,1` · **Poise** `.65,0,.35,1` · **Snap** `.77,0,.175,1`
+  (movement) · **Arrive** `.23,1,.32,1` · **Bloom** `.16,1,.3,1` · **Lively** `.34,1.3,.64,1` (entrances) · **Depart**
+  `.7,0,.84,0` (exits) · **Natural** · **Linear**. `kind: 'move'|'enter'|'exit'` decides which are marked *Suggested*.
+- `at` arrays are retimed in place, so pass the same arrays you read in `render`. Anything derived from a phase time
+  must be computed live (a function), not cached at load.
+- `types` is free-form; implement each style in your render and name/describe them in `AnimPlayer.TYPE_INFO`
+  (wipe, slide, dissolve, rise are pre-described).
+- Changes persist per viewer, travel into **Export MP4** (`?tune=`), and **Copy changes** (or Notes → Copy all)
+  produces a plain-language list, e.g. `Learn → About [a56]: feel custom → Snap cubic-bezier(.77, 0, .175, 1)`.
+  When you receive one, bake the values into the defaults in `player.tune({...})` and the code, then verify.
+
 ## The review bar
 
-Two rows: a full-width scrubber labelled with `beats`, then play/pause · timecode · 1× ½× ¼× · **Notes** (show/hide,
-with count) · **+ Note** · **Instagram** · **Export MP4**. The notes panel and Instagram preview are remembered per
+Two rows: a full-width scrubber labelled with `beats`, then play/pause · timecode · 1× ½× ¼× · **Motion** · **Notes**
+(a drawer with two tabs; the stage is refitted beside it) · **+ Note** · **Instagram** · **Export MP4**. The notes panel and Instagram preview are remembered per
 viewer. **I** cycles the Instagram preview: off → white backdrop (card with a soft shadow) → black backdrop; the post
 itself is always light mode. `?ig=light` / `?ig=dark` opens straight into it (handy for sharing). Configure the post with
 `instagram: { handle, subtitle, caption, likes, comments, slides, avatar }` — `slides > 1` adds the carousel counter and dots.
 
-Keys: Space play/pause · ←/→ one frame (Shift = 0.5s) · 1–9 keyframes · N new note · L notes panel · I Instagram · S speed.
+Keys: Space play/pause · ←/→ one frame (Shift = 0.5s) · 1–9 keyframes · N new note · M motion · L notes · I Instagram · S speed · Esc closes.
 
 ## Acting on notes
 

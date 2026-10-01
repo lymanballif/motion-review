@@ -9,7 +9,7 @@ social posts — with a review harness that lets people leave **timestamped note
 
 ## What you get
 
-- **Review bar** (`assets/review-bar.js`) — drop-in UI on two rows: a full-width scrubber labelled with your
+- **Review bar** (`assets/review-bar.js`) — drop-in UI on two rows, plus a **Motion** panel for tuning transitions: a full-width scrubber labelled with your
   animation's beats, then play/pause, timecode, **1× · ½× · ¼×** speed, a notes panel you can show or hide
   (the animation is refitted beside it, never covered), notes pinned to the current moment (**N**), **Copy all**
   as `1.85s — note` lines to paste to your agent, an **Instagram** feed-post preview (**I**), and **Export MP4**.
@@ -21,6 +21,23 @@ social posts — with a review harness that lets people leave **timestamped note
   `framecheck.py` (frames at timestamps, loop-seam check, pop/jitter scan, video contact sheets).
 - **Guidance** (`SKILL.md`, `references/notes-workflow.md`) — how the agent should build animations for review
   and turn notes like *"3.94s — this pause was too long"* into precise, verified changes.
+
+## Tune the motion — no motion background needed
+
+![Motion panel](docs/motion-panel.png)
+
+Press **M** (or **Motion**) for the animation's key transitions, each as a card. Open one and the playhead jumps to it:
+
+- **Feel** — curated curves with plain names and a live preview on hover: *Glide*, *Settle*, *Poise*, *Snap* for
+  movement; *Arrive*, *Bloom*, *Lively* for entrances; *Depart* for exits; *Natural*, *Linear*. The right ones for the
+  transition are marked *Suggested*.
+- **Custom** — drag the curve's two handles (overshoot allowed) or type `cubic-bezier` values; a dot shows the motion.
+- **Timing** — *Duration* (quicker ↔ slower) and *Starts* (earlier ↔ later).
+- **Style** — for swaps: *Wipe*, *Slide*, *Dissolve*, *Rise*.
+- **Preview this** — loops just that transition (with ½× / ¼× for detail).
+
+Changes apply live, are remembered, go into **Export MP4**, and **Copy changes** turns them into a plain-language list
+to hand to your agent, which bakes them into the code. Declare tunable transitions with `player.tune({...})` (see SKILL.md).
 
 ## Instagram preview
 
@@ -43,6 +60,7 @@ ReviewBar.mount(player, {
 | Space | Play / pause |
 | ← / → | Step one frame (Shift: 0.5s) |
 | 1–9 | Jump to keyframes |
+| M | Motion panel: tune key transitions |
 | N | Note at this moment (opens the notes panel) |
 | L | Show / hide notes |
 | I | Instagram preview: off → White → Black |

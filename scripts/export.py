@@ -2,6 +2,7 @@
 Renders every frame in headless Chromium via window.renderFrame(t) at 2× (supersampled), then encodes H.264
 with AVFoundation (encode.swift — no ffmpeg needed). Frame size comes from the page (window.EXPORT_SIZE).
 usage: python3 tools/export.py [--url http://localhost:5178/] [--fps 60] [--scale 2] [--out exports/name.mp4]
+(the Export MP4 button passes the reviewer's motion tuning in the URL as ?tune=…)
 Needs: pip install playwright && playwright install chromium; Xcode command line tools (swift)."""
 import argparse, asyncio, json, os, shutil, subprocess, tempfile, time
 from playwright.async_api import async_playwright

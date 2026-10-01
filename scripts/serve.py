@@ -39,7 +39,12 @@ class Handler(SimpleHTTPRequestHandler):
         if job is not None and job.poll() is None: return self._json(409, self._status())
         os.makedirs(os.path.dirname(PROGRESS), exist_ok=True)
         with open(PROGRESS, 'w') as f: json.dump({'state': 'rendering', 'progress': 0}, f)
-        job = subprocess.Popen([sys.executable, os.path.join(HERE, 'export.py'), '--url', f'http://localhost:{PORT}{PAGE}'], cwd=ROOT)
+        try:   # the page sends its live motion tuning (?tune=…) so the export matches what the reviewer sees
+            body = json.loads(self.rfile.read(int(self.headers.get('Content-Length') or 0)) or b'{}')
+        except Exception: body = {}
+        q = body.get('query') or ''
+        url = f'http://localhost:{PORT}{PAGE}' + (('&' if '?' in PAGE else '?') + q if q else '')
+        job = subprocess.Popen([sys.executable, os.path.join(HERE, 'export.py'), '--url', url], cwd=ROOT)
         return self._json(202, self._status())
 
     def send_head(self):
